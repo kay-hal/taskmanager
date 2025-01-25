@@ -1,0 +1,12 @@
+name: task-manager
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3.11
+  - fastapi
+  - uvicorn
+  - python-dotenv
+  - pip
+  - pip:
+    - anthropic  # Because some packages just refuse to join the conda party
