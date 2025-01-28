@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Play, Pause, Check } from 'lucide-react';
+import { api } from '../services/api';
 
 const TaskManager = () => {
   const [tasks, setTasks] = useState([]);
@@ -7,6 +8,7 @@ const TaskManager = () => {
   const [priorityRules, setPriorityRules] = useState('');
   const [timers, setTimers] = useState({});
   const [intervalIds, setIntervalIds] = useState({});
+  const [sortedTasks, setSortedTasks] = useState([]);
 
   useEffect(() => {
     fetchTasks();
@@ -18,17 +20,9 @@ const TaskManager = () => {
 
   const fetchTasks = async () => {
     try {
-      const response = await fetch('http://localhost:5005/api/tasks', {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-        },
-        // credentials: 'include'
-      });
-      const data = await response.json();
-      console.log('Received tasks:', data);
-      setTasks(data);
+      const tasks = await api.get('/tasks');
+      setTasks(tasks);
+      setSortedTasks(tasks);
     } catch (error) {
       console.error('Error fetching tasks:', error);
     }
@@ -37,14 +31,7 @@ const TaskManager = () => {
   const handleAddTask = async (e) => {
     e.preventDefault();
     try {
-      await fetch('http://localhost:5005/api/tasks', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        // credentials: 'include',
-        body: JSON.stringify({ description: taskInput }),
-      });
+      await api.post('/tasks', { description: taskInput });
       setTaskInput('');
       fetchTasks();
     } catch (error) {
@@ -52,18 +39,10 @@ const TaskManager = () => {
     }
   };
 
-  const handleUpdatePriorityRules = async (e) => {
+  const handleUpdatePriorityRules = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      await fetch('http://localhost:5005/api/priorities', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-        },
-        // credentials: 'include',
-        body: JSON.stringify({ rules: priorityRules }),
-      });
+      await api.post('/priorities', { rules: priorityRules });
       setPriorityRules('');
       fetchTasks();
     } catch (error) {
@@ -109,18 +88,12 @@ const TaskManager = () => {
     return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
   };
 
-  const updateTaskTimer = async (taskId, status) => {
+  const updateTaskTimer = async (taskId: number, status: string) => {
     try {
-      await fetch(`http://localhost:5005/api/tasks/${taskId}/timer`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-        },
-        // credentials: 'include',
-        body: JSON.stringify({ status, time: timers[taskId] || 0 }),
+      await api.put(`/tasks/${taskId}/timer`, {
+        status,
+        time: timers[taskId] || 0
       });
-      fetchTasks();
     } catch (error) {
       console.error('Error updating task timer:', error);
     }
@@ -129,22 +102,15 @@ const TaskManager = () => {
   const completeTask = async (taskId) => {
     pauseTimer(taskId);
     try {
-      await fetch(`http://localhost:5005/api/tasks/${taskId}/timer`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-        },
-        // credentials: 'include',
-        body: JSON.stringify({ status: 'completed', time: timers[taskId] || 0 }),
+      await api.put(`/tasks/${taskId}/timer`, {
+        status: 'completed',
+        time: timers[taskId] || 0
       });
       fetchTasks();
     } catch (error) {
       console.error('Error completing task:', error);
     }
   };
-
-  const sortedTasks = [...tasks].sort((a, b) => a.priority - b.priority);
 
   return (
     <div className="p-8 max-w-6xl mx-auto bg-cream">
