@@ -144,18 +144,26 @@ const TaskManager = () => {
     }
   };
 
+  const sortedTasks = [...tasks].sort((a, b) => a.priority - b.priority);
+
   return (
-    <div className="p-6 max-w-6xl mx-auto">
-      <div className="space-y-6">
+    <div className="p-8 max-w-6xl mx-auto bg-cream">
+      <div className="space-y-8">
         <form onSubmit={handleAddTask} className="space-y-4">
           <input
             type="text"
             value={taskInput}
             onChange={(e) => setTaskInput(e.target.value)}
             placeholder="Enter new task..."
-            className="w-full p-2 border rounded"
+            className="w-full p-4 border-2 border-coral rounded-lg bg-cream-light 
+            focus:outline-none focus:ring-2 focus:ring-coral-light focus:border-coral
+            text-forest-dark placeholder-coral/50 text-lg"
           />
-          <button type="submit" className="px-4 py-2 bg-blue-500 text-white rounded">
+          <button 
+            type="submit" 
+            className="px-6 py-3 bg-coral text-cream rounded-lg hover:bg-coral-dark 
+            transition-colors duration-200 font-semibold text-lg shadow-md"
+          >
             Add Task
           </button>
         </form>
@@ -166,52 +174,61 @@ const TaskManager = () => {
             value={priorityRules}
             onChange={(e) => setPriorityRules(e.target.value)}
             placeholder="Enter priority rules..."
-            className="w-full p-2 border rounded"
+            className="w-full p-4 border-2 border-forest rounded-lg bg-cream-light 
+            focus:outline-none focus:ring-2 focus:ring-forest-light focus:border-forest
+            text-forest-dark placeholder-forest/50 text-lg"
           />
-          <button type="submit" className="px-4 py-2 bg-green-500 text-white rounded">
+          <button 
+            type="submit" 
+            className="px-6 py-3 bg-forest text-cream rounded-lg hover:bg-forest-dark 
+            transition-colors duration-200 font-semibold text-lg shadow-md"
+          >
             Update Priority Rules
           </button>
         </form>
 
-        <div className="overflow-x-auto">
-          <table className="min-w-full border-collapse">
+        <div className="overflow-x-auto rounded-lg shadow-lg">
+          <table className="min-w-full border-collapse bg-cream-light">
             <thead>
-              <tr className="bg-gray-100">
-                <th className="p-4 text-left">Task</th>
-                <th className="p-4 text-left">Priority</th>
-                <th className="p-4 text-left">Status</th>
-                <th className="p-4 text-left">Timer</th>
-                <th className="p-4 text-left">Actions</th>
+              <tr className="bg-coral text-cream">
+                <th className="p-4 text-left font-semibold">Task</th>
+                <th className="p-4 text-left font-semibold">Priority</th>
+                <th className="p-4 text-left font-semibold">Status</th>
+                <th className="p-4 text-left font-semibold">Timer</th>
+                <th className="p-4 text-left font-semibold">Actions</th>
               </tr>
             </thead>
             <tbody>
-              {tasks && Array.isArray(tasks) ? (
-                tasks.map((task) => (
-                  <tr key={task.id} className="border-t">
-                    <td className="p-4">{task.description}</td>
-                    <td className="p-4">{task.priority}</td>
-                    <td className="p-4">{task.status}</td>
-                    <td className="p-4">{formatTime(timers[task.id] || 0)}</td>
+              {sortedTasks && Array.isArray(sortedTasks) ? (
+                sortedTasks.map((task) => (
+                  <tr key={task.id} className="border-t border-coral/20 hover:bg-cream-dark">
+                    <td className="p-4 text-forest-dark">{task.description}</td>
+                    <td className="p-4 text-forest-dark">{task.priority}</td>
+                    <td className="p-4 text-forest-dark">{task.status}</td>
+                    <td className="p-4 text-forest-dark">{formatTime(timers[task.id] || 0)}</td>
                     <td className="p-4 space-x-2">
                       {task.status !== 'completed' && (
                         <>
                           <button
                             onClick={() => startTimer(task.id)}
-                            className="p-2 bg-green-500 text-white rounded"
+                            className="p-2 bg-forest text-cream rounded hover:bg-forest-dark
+                            transition-colors duration-200 disabled:opacity-50"
                             disabled={task.status === 'active'}
                           >
                             <Play size={16} />
                           </button>
                           <button
                             onClick={() => pauseTimer(task.id)}
-                            className="p-2 bg-yellow-500 text-white rounded"
+                            className="p-2 bg-coral text-cream rounded hover:bg-coral-dark
+                            transition-colors duration-200 disabled:opacity-50"
                             disabled={task.status !== 'active'}
                           >
                             <Pause size={16} />
                           </button>
                           <button
                             onClick={() => completeTask(task.id)}
-                            className="p-2 bg-blue-500 text-white rounded"
+                            className="p-2 bg-forest-light text-cream rounded hover:bg-forest
+                            transition-colors duration-200"
                           >
                             <Check size={16} />
                           </button>
@@ -222,7 +239,7 @@ const TaskManager = () => {
                 ))
               ) : (
                 <tr>
-                  <td colSpan={5} className="p-4 text-center">No tasks available</td>
+                  <td colSpan={5} className="p-4 text-center text-forest-dark">No tasks available</td>
                 </tr>
               )}
             </tbody>
