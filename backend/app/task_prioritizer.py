@@ -1,6 +1,8 @@
 import anthropic
 import logging
 from typing import List
+import datetime
+import time
 from .models import Task, TaskPriorities
 
 class TaskPrioritizer:
@@ -20,6 +22,9 @@ class TaskPrioritizer:
         
         rules_text = "\n".join([f"- {rule}" for rule in rules]) if rules else "No specific rules provided"
         
+        # Get current timestamp with system timezone
+        current_time = datetime.datetime.now().astimezone().strftime("%Y-%m-%d %H:%M:%S %z")
+        
         return f"""here's a list of task descriptions
                 \"\"\"
                 {task_descriptions}
@@ -29,6 +34,8 @@ class TaskPrioritizer:
                 \"\"\"
                 {rules_text}
                 \"\"\"
+
+                Current timestamp: {current_time}
 
                 rank the tasks based on the prioritization statement and give me a json list of the specified schema. do not change anything in the task description. only give me the json list and nothing else"""
 

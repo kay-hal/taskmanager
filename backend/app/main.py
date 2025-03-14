@@ -75,10 +75,29 @@ async def update_priorities(rules: models.PriorityRules, db: Session = Depends(g
     
     return {"message": "Priorities updated successfully"}
 
+@app.post("/api/priorities/refresh")
+async def refresh_priorities(db: Session = Depends(get_db)):
+    """Refresh task priorities using existing rules without changing them."""
+    db_manager = DatabaseManager(db)
+    tasks = db_manager.get_all_tasks()
+    
+    prioritizer = TaskPrioritizer(os.getenv("ANTHROPIC_API_KEY"))
+    prioritized_tasks = prioritizer.prioritize_tasks(tasks, db_manager.priority_rules)
+    db_manager.update_task_priorities({t.id: t.priority for t in prioritized_tasks})
+    
+    return {"message": "Task priorities refreshed successfully"}
+
 @app.put("/api/tasks/{task_id}/timer")
 async def update_task_timer(task_id: int, timer_update: models.TimerUpdate, db: Session = Depends(get_db)):
     db_manager = DatabaseManager(db)
     updated_task = db_manager.update_task_timer(task_id, timer_update.status, timer_update.time)
+    return updated_task
+
+@app.put("/api/tasks/{task_id}")
+async def update_task(task_id: int, task_update: models.TaskUpdate, db: Session = Depends(get_db)):
+    """Update a task's description."""
+    db_manager = DatabaseManager(db)
+    updated_task = db_manager.update_task_description(task_id, task_update.description)
     return updated_task
 
 @app.delete("/api/admin/tasks")

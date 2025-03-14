@@ -70,6 +70,19 @@ class DatabaseManager:
         self.session.refresh(db_task)
         return db_task
 
+    def update_task_description(self, task_id: int, description: str):
+        """Update the description of a task."""
+        logger.info(f"Updating description for task {task_id} to: {description}")
+        db_task = self.session.query(models.TaskModel).filter(models.TaskModel.id == task_id).first()
+        if not db_task:
+            logger.error(f"Task {task_id} not found")
+            raise HTTPException(status_code=404, detail="Task not found")
+        
+        db_task.description = description
+        self.session.commit()
+        self.session.refresh(db_task)
+        return db_task
+
     def update_task_timer(self, task_id: int, status: TaskStatus, time: int):
         logger.info(f"Updating timer for task {task_id} - Status: {status}, Time: {time}")
         db_task = self.session.query(models.TaskModel).filter(models.TaskModel.id == task_id).first()

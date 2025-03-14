@@ -41,6 +41,9 @@ class Task(BaseModel):
 class TaskCreate(BaseModel):
     description: str
 
+class TaskUpdate(BaseModel):
+    description: str
+
 class PriorityRules(BaseModel):
     rules: str
 
