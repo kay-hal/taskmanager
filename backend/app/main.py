@@ -6,8 +6,9 @@ import os
 import logging
 from dotenv import load_dotenv
 from . import models
-from .database import get_db, DatabaseManager
+from .database import get_db, DatabaseManager, engine
 from .task_prioritizer import TaskPrioritizer
+import sys
 
 # Load environment variables
 load_dotenv()
@@ -16,10 +17,23 @@ load_dotenv()
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
+# Log runtime information
+logger.info(f"Starting application")
+logger.info(f"Python version: {sys.version}")
+logger.info(f"Working directory: {os.getcwd()}")
+logger.info(f"Environment: {os.getenv('ENVIRONMENT', 'development')}")
+logger.info(f"RENDER environment variable: {os.getenv('RENDER')}")
+
+# Check for required environment variables
+required_variables = ['DATABASE_URL', 'ADMIN_TOKEN', 'ANTHROPIC_API_KEY']
+missing_variables = [var for var in required_variables if not os.getenv(var)]
+if missing_variables:
+    logger.warning(f"Missing required environment variables: {', '.join(missing_variables)}")
+
 # Get admin token
 ADMIN_TOKEN = os.getenv('ADMIN_TOKEN')
 if not ADMIN_TOKEN:
-    raise ValueError("ADMIN_TOKEN must be set in .env file")
+    logger.warning("ADMIN_TOKEN not set in environment - admin endpoints will be unusable")
 
 app = FastAPI()
 
@@ -31,6 +45,37 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Startup events
+@app.on_event("startup")
+async def startup_event():
+    logger.info("Application startup")
+    # Log environment variables (names only)
+    logger.info("Environment variables (names only):")
+    env_vars = sorted(os.environ.keys())
+    logger.info(f"  Found {len(env_vars)} environment variables")
+    for key in env_vars:
+        # Indicate which critical variables are present (without revealing values)
+        if key in required_variables:
+            logger.info(f"  ✓ {key} (required)")
+        else:
+            logger.info(f"  {key}")
+    
+    # Check database connection
+    try:
+        db_url = str(engine.url)
+        if '@' in db_url:
+            # Redact sensitive info
+            parts = db_url.split('@')
+            redacted_url = f"{parts[0].split('://')[0]}://*****:*****@{parts[1]}"
+            logger.info(f"Database URL: {redacted_url}")
+        
+        from sqlalchemy import text
+        with engine.connect() as conn:
+            result = conn.execute(text("SELECT 1")).fetchone()
+            logger.info(f"Database connection test: {result[0] == 1}")
+    except Exception as e:
+        logger.error(f"Error testing database connection: {str(e)}")
 
 # Security
 api_key_header = APIKeyHeader(name="X-Admin-Token", auto_error=True)

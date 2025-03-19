@@ -8,24 +8,46 @@ from . import models
 from .enums import TaskStatus
 from fastapi import HTTPException
 
+# Configure logging
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
-# Check if running on Render
-IS_RENDER = os.environ.get('RENDER', False)
+# Log all environment variables for debugging (with sensitive info redacted)
+logger.info("Environment Variables (names only):")
+for key in os.environ.keys():
+    logger.info(f"  {key}")
 
-if IS_RENDER:
-    # Use Render PostgreSQL
-    DATABASE_URL = os.environ.get("DATABASE_URL")
-    if not DATABASE_URL:
-        raise ValueError("DATABASE_URL environment variable is not set")
-    logger.info(f"Using Render PostgreSQL database (URL redacted)")
+# Get DATABASE_URL from environment
+DATABASE_URL = os.environ.get("DATABASE_URL")
+
+# Check if we're running on Render (various ways to detect)
+IS_RENDER = os.environ.get('RENDER', False) or 'render.com' in os.environ.get('HOSTNAME', '')
+logger.info(f"Running on Render: {IS_RENDER}")
+
+if not DATABASE_URL:
+    if IS_RENDER:
+        logger.critical("DATABASE_URL not found in environment but required for Render deployment")
+        raise ValueError("DATABASE_URL environment variable is required for Render deployment")
+    else:
+        # Use SQLite for local development
+        DATABASE_URL = "sqlite:///./tasks.db"
+        logger.info(f"Using SQLite database: {DATABASE_URL}")
+
+# Redact and log database URL for debugging
+if DATABASE_URL:
+    redacted_url = DATABASE_URL
+    if '@' in redacted_url:
+        # Hide sensitive credentials in logs
+        parts = redacted_url.split('@')
+        protocol_parts = parts[0].split('://')
+        if len(protocol_parts) > 1:
+            redacted_url = f"{protocol_parts[0]}://****:****@{parts[1]}"
+    logger.info(f"Database URL: {redacted_url}")
 else:
-    # Use SQLite for local development
-    DATABASE_URL = "sqlite:///./tasks.db"
-    logger.info(f"Using SQLite database: {DATABASE_URL}")
+    logger.critical("No DATABASE_URL could be determined!")
 
 # Configure engine based on database type
-if DATABASE_URL.startswith("sqlite"):
+if DATABASE_URL and DATABASE_URL.startswith("sqlite"):
     engine = create_engine(
         DATABASE_URL,
         connect_args={"check_same_thread": False},
