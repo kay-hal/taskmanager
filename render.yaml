@@ -1,0 +1,10 @@
+services:
+  - type: web
+    name: mindex-taskmanager-frontend
+    runtime: static
+    rootDir: frontend
+    buildCommand: npm install && npm run build
+    publishDir: dist
+    envVars:
+      - key: VITE_API_URL
+        value: https://mindex-taskmanager.onrender.com
