@@ -63,7 +63,8 @@ class TaskPrioritizer:
             )
 
             tool_calls = [content for content in message.content if content.type == "tool_use"]
-            if not tool_calls or not tool_calls[0].input:
+            if not tool_calls or not hasattr(tool_calls[0], 'input'):
+                self.logger.error("No tool use found in response")
                 return tasks
 
             priority_data = TaskPriorities(**tool_calls[0].input)
