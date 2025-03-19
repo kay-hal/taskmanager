@@ -1,9 +1,9 @@
-from mangum import Mangum
 from app.main import app
 
-# Vercel serverless function handler
-handler = Mangum(app, lifespan="off")
+# This file is kept for compatibility with older deployments
+# but is not needed for Render deployments, which use app.main:app directly
 
-# Make it work with Vercel
-def main(event, context):
-    return handler(event, context) 
+# For local development
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=5005) 

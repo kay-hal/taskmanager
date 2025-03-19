@@ -8,3 +8,19 @@ services:
     envVars:
       - key: VITE_API_URL
         value: https://mindex-taskmanager.onrender.com
+
+  - type: web
+    name: mindex-taskmanager
+    runtime: python
+    rootDir: backend
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port 5005 --reload
+    preDeployCommand: python scripts/init_db.py
+    envVars:
+      - key: RENDER
+        value: "1"
+      - key: ENVIRONMENT
+        value: "production"
+      - key: DATABASE_URL
+        value: "postgresql://taskmanager_r0ur_user:JZ1X9C0ox29DWl3Bd9tnKKVObu4XdDjP@dpg-cvd1mhrtq21c73a8a0ng-a/taskmanager_r0ur"
+      - fromGroup: taskmanager-secrets

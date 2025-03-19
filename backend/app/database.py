@@ -10,18 +10,19 @@ from fastapi import HTTPException
 
 logger = logging.getLogger(__name__)
 
-# Check if running on Vercel
-IS_VERCEL = os.environ.get('VERCEL', False)
+# Check if running on Render
+IS_RENDER = os.environ.get('RENDER', False)
 
-if IS_VERCEL:
-    # Use Vercel Postgres if available
-    POSTGRES_URL = os.environ.get("POSTGRES_URL")
-    if not POSTGRES_URL:
-        raise ValueError("POSTGRES_URL environment variable is not set")
-    DATABASE_URL = POSTGRES_URL
+if IS_RENDER:
+    # Use Render PostgreSQL
+    DATABASE_URL = os.environ.get("DATABASE_URL")
+    if not DATABASE_URL:
+        raise ValueError("DATABASE_URL environment variable is not set")
+    logger.info(f"Using Render PostgreSQL database (URL redacted)")
 else:
     # Use SQLite for local development
     DATABASE_URL = "sqlite:///./tasks.db"
+    logger.info(f"Using SQLite database: {DATABASE_URL}")
 
 # Configure engine based on database type
 if DATABASE_URL.startswith("sqlite"):
