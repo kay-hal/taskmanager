@@ -5,12 +5,16 @@ import datetime
 import time
 from .models import Task, TaskPriorities
 
+# Set up logger for this module
+logger = logging.getLogger(__name__)
+
 class TaskPrioritizer:
     def __init__(self, api_key: str):
         if not api_key:
             logger.error("ANTHROPIC_API_KEY not found in environment variables")
             raise ValueError("API key not configured")
         
+        # Simple direct initialization of the Anthropic client
         self.client = anthropic.Anthropic(api_key=api_key)
         self.logger = logging.getLogger(__name__)
 
