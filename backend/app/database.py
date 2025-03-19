@@ -4,7 +4,7 @@ from sqlalchemy.orm import sessionmaker, declarative_base, Session
 from sqlalchemy.pool import StaticPool
 from datetime import datetime
 import logging
-from . import models
+# Avoid circular import by importing models and enums only in functions where needed
 from .enums import TaskStatus
 from fastapi import HTTPException
 
@@ -74,6 +74,8 @@ class DatabaseManager:
 
     def get_all_tasks(self):
         logger.debug("Retrieving all tasks")
+        # Import here to avoid circular imports
+        from . import models
         return self.session.query(models.TaskModel).order_by(
             models.TaskModel.priority.desc(),
             models.TaskModel.created_at
@@ -81,6 +83,8 @@ class DatabaseManager:
 
     def add_task(self, description: str):
         logger.info(f"Adding new task with description: {description}")
+        # Import here to avoid circular imports
+        from . import models
         db_task = models.TaskModel(
             description=description,
             priority=len(self.get_all_tasks()) + 1,
@@ -96,6 +100,8 @@ class DatabaseManager:
     def update_task_description(self, task_id: int, description: str):
         """Update the description of a task."""
         logger.info(f"Updating description for task {task_id} to: {description}")
+        # Import here to avoid circular imports
+        from . import models
         db_task = self.session.query(models.TaskModel).filter(models.TaskModel.id == task_id).first()
         if not db_task:
             logger.error(f"Task {task_id} not found")
@@ -108,6 +114,8 @@ class DatabaseManager:
 
     def update_task_timer(self, task_id: int, status: TaskStatus, time: int):
         logger.info(f"Updating timer for task {task_id} - Status: {status}, Time: {time}")
+        # Import here to avoid circular imports
+        from . import models
         db_task = self.session.query(models.TaskModel).filter(models.TaskModel.id == task_id).first()
         if not db_task:
             logger.error(f"Task {task_id} not found")
@@ -126,6 +134,8 @@ class DatabaseManager:
         return db_task
 
     def update_task_priorities(self, task_priorities: dict):
+        # Import here to avoid circular imports
+        from . import models
         for task_id, priority in task_priorities.items():
             db_task = self.session.query(models.TaskModel).filter(models.TaskModel.id == task_id).first()
             if db_task:
@@ -133,16 +143,22 @@ class DatabaseManager:
         self.session.commit()
 
     def delete_all_tasks(self):
+        # Import here to avoid circular imports
+        from . import models
         self.session.query(models.TaskModel).delete()
         self.session.commit()
 
     @property
     def priority_rules(self) -> list[str]:
+        # Import here to avoid circular imports
+        from . import models
         rules = self.session.query(models.PriorityRuleModel).all()
         return [rule.rule for rule in rules]
 
     @priority_rules.setter
     def priority_rules(self, rules: list[str]):
+        # Import here to avoid circular imports
+        from . import models
         self.session.query(models.PriorityRuleModel).delete()
         for rule in rules:
             db_rule = models.PriorityRuleModel(rule=rule)

@@ -2,6 +2,7 @@ from pydantic import BaseModel, Field
 from typing import List, Optional
 from datetime import datetime
 from sqlalchemy import Column, Integer, String, DateTime, Enum as SQLEnum
+# Import Base directly from database to avoid potential circular imports
 from .database import Base
 from .enums import TaskStatus
 
